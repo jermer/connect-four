@@ -7,7 +7,6 @@
 
 const WIDTH = 7;
 const HEIGHT = 6;
-let freeCells = WIDTH * HEIGHT;
 
 let currPlayer = 1; // active player: 1 or 2
 const board = []; // array of rows, each row is array of cells  (board[y][x])
@@ -65,7 +64,7 @@ function findSpotForCol(x) {
   // TODO: write the real version of this, rather than always returning 0
   for (y = HEIGHT - 1; y >= 0; y--) {
     let cell = document.getElementById(`${y}-${x}`);
-    if( !cell.hasChildNodes() )
+    if (!cell.hasChildNodes())
       return y;
   }
   return null;
@@ -105,16 +104,17 @@ function handleClick(evt) {
   // TODO: add line to update in-memory board
   placeInTable(y, x);
   board[y][x] = currPlayer;
-  freeCells--;
-
+  
   // check for win
   if (checkForWin()) {
     return endGame(`Player ${currPlayer} won!`);
   }
 
   // check for tie
-  // TODO: check if all cells in board are filled; if so call, call endGame
-  if( freeCells === 0) {
+  // if all cells in board are filled; if so call, call endGame
+  if (board.every(row => {
+    return row.every(col => col !== null);
+  })) {
     return endGame(`It's a tie!`);
   }
 
@@ -143,13 +143,18 @@ function checkForWin() {
 
   // TODO: read and understand this code. Add comments to help you.
 
+  // loop over cells in the grid
   for (var y = 0; y < HEIGHT; y++) {
     for (var x = 0; x < WIDTH; x++) {
+      // check to the right in the grid
       var horiz = [[y, x], [y, x + 1], [y, x + 2], [y, x + 3]];
+      // check down in the grid
       var vert = [[y, x], [y + 1, x], [y + 2, x], [y + 3, x]];
+      // check diagonal down and to the right
       var diagDR = [[y, x], [y + 1, x + 1], [y + 2, x + 2], [y + 3, x + 3]];
+      // check diagonal down and to the left
       var diagDL = [[y, x], [y + 1, x - 1], [y + 2, x - 2], [y + 3, x - 3]];
-
+      // check whether any of those four directions contains a win
       if (_win(horiz) || _win(vert) || _win(diagDR) || _win(diagDL)) {
         return true;
       }
