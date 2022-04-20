@@ -36,11 +36,17 @@ function makeHtmlBoard() {
   const top = document.createElement("tr");
   top.setAttribute("id", "column-top");
   top.addEventListener("click", handleClick);
+  // top.addEventListener("mouseenter", handleMouseEnter);
+  // top.addEventListener("mouseleave", handleMouseLeave);
 
   // Create the individual cells of the top row
   for (let x = 0; x < WIDTH; x++) {
     const headCell = document.createElement("td");
     headCell.setAttribute("id", x);
+
+    // headCell.addEventListener("mouseenter", handleMouseEnter);
+    // headCell.addEventListener("mouseleave", handleMouseLeave);
+  
     top.append(headCell);
   }
   htmlBoard.append(top);
@@ -91,6 +97,7 @@ function endGame(msg) {
 /** handleClick: handle click of column top to play piece */
 
 function handleClick(evt) {
+  //debugger;
   // get x from ID of clicked cell
   var x = +evt.target.id;
 
@@ -122,6 +129,29 @@ function handleClick(evt) {
   // TODO: switch currPlayer 1 <-> 2
   currPlayer === 1 ? currPlayer = 2 : currPlayer = 1;
 }
+
+
+/** Handle hover events **/
+
+function handleMouseEnter(evt) {
+  //debugger;
+  var x = +evt.target.id;
+  console.log( `enter x = ${x}`);
+
+  const newPiece = document.createElement("div");
+  newPiece.classList.add(`piece`, `player${currPlayer}`);
+
+  const destinationCell = evt.target;
+  destinationCell.append(newPiece);
+}
+
+function handleMouseLeave(evt) {
+  var x = +evt.target.id;
+  console.log( `leave x = ${x}`);
+
+  evt.target.replaceChildren();
+}
+
 
 /** checkForWin: check board cell-by-cell for "does a win start here?" */
 
