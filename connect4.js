@@ -9,7 +9,9 @@ const WIDTH = 7;
 const HEIGHT = 6;
 
 let currPlayer = 1; // active player: 1 or 2
-const board = []; // array of rows, each row is array of cells  (board[y][x])
+const board = [];   // array of rows, each row is array of cells  (board[y][x])
+
+let pauseClicks = false;  // temporarily ignore user clicks
 
 /** makeBoard: create in-JS board structure:
  *    board = array of rows, each row is array of cells  (board[y][x])
@@ -36,17 +38,17 @@ function makeHtmlBoard() {
   const top = document.createElement("tr");
   top.setAttribute("id", "column-top");
   top.addEventListener("click", handleClick);
-  // top.addEventListener("mouseenter", handleMouseEnter);
-  // top.addEventListener("mouseleave", handleMouseLeave);
 
   // Create the individual cells of the top row
   for (let x = 0; x < WIDTH; x++) {
     const headCell = document.createElement("td");
     headCell.setAttribute("id", x);
 
-    // headCell.addEventListener("mouseenter", handleMouseEnter);
-    // headCell.addEventListener("mouseleave", handleMouseLeave);
-  
+    // add a "ghost piece" to be displayed in the top row
+    const ghostPiece = document.createElement("div");
+    ghostPiece.classList.add(`ghostpiece`, `piece`, `player${currPlayer}`);
+    headCell.append(ghostPiece);
+
     top.append(headCell);
   }
   htmlBoard.append(top);
@@ -81,8 +83,9 @@ function findSpotForCol(x) {
 function placeInTable(y, x) {
   // TODO: make a div and insert into correct table cell
   const newPiece = document.createElement("div");
-  newPiece.classList.add(`piece`, `player${currPlayer}`);
-
+  newPiece.classList.add(`piece`, `animpiece`, `player${currPlayer}`);
+  newPiece.setAttribute("top", "-500%");
+  // debugger;
   const destinationCell = document.getElementById(`${y}-${x}`);
   destinationCell.append(newPiece);
 }
@@ -91,15 +94,48 @@ function placeInTable(y, x) {
 
 function endGame(msg) {
   // TODO: pop up alert message
-  alert(msg);
+  //debugger;
+  setTimeout(() => {
+    pauseClicks = true;
+    alert(msg);
+  }, 250);
+
+  // requestAnimationFrame(() => {
+  //   // fires before next repaint
+  //   requestAnimationFrame(() => {
+  //     // fires before the _next_ next repaint
+  //     // ...which is effectively _after_ the next repaint
+  //     alert(msg);
+  //   });
+  // });
 }
 
 /** handleClick: handle click of column top to play piece */
 
 function handleClick(evt) {
-  //debugger;
-  // get x from ID of clicked cell
-  var x = +evt.target.id;
+  if (pauseClicks) {
+    return;
+  }
+  else {
+    pauseClicks = true;
+    setTimeout(() => {
+      pauseClicks = false;
+    }, 250);
+  }
+
+  // a click in the cell might be on the "ghost piece"
+  // or in the empty area of the cell
+  let x;
+  if (evt.target.classList.contains("piece")) {
+    //console.log("clicked piece");
+    // change the target to be the cell
+    x = evt.target.parentElement.id;
+  }
+  else {
+    //console.log("clicked space");
+    x = evt.target.id;
+  }
+  // x = +target.id;
 
   // get next spot in column (if none, ignore click)
   var y = findSpotForCol(x);
@@ -108,14 +144,18 @@ function handleClick(evt) {
   }
 
   // place piece in board and add to HTML table
-  // TODO: add line to update in-memory board
   placeInTable(y, x);
+
+  // update in-memory board
   board[y][x] = currPlayer;
-  
+
   // check for win
   if (checkForWin()) {
-    return endGame(`Player ${currPlayer} won!`);
+    endGame(`Player ${currPlayer} won!`);
+    return;
   }
+
+  //alert("Hang on!");
 
   // check for tie
   // if all cells in board are filled; if so call, call endGame
@@ -126,32 +166,22 @@ function handleClick(evt) {
   }
 
   // switch players
-  // TODO: switch currPlayer 1 <-> 2
+  switchPlayers();
+}
+
+
+/** Switch players **/
+
+function switchPlayers() {
   currPlayer === 1 ? currPlayer = 2 : currPlayer = 1;
+
+  const ghostArr = [...document.querySelectorAll(".ghostpiece")];
+  ghostArr.map((val) => {
+    val.classList.toggle('player1');
+    val.classList.toggle('player2');
+    return val;
+  })
 }
-
-
-/** Handle hover events **/
-
-function handleMouseEnter(evt) {
-  //debugger;
-  var x = +evt.target.id;
-  console.log( `enter x = ${x}`);
-
-  const newPiece = document.createElement("div");
-  newPiece.classList.add(`piece`, `player${currPlayer}`);
-
-  const destinationCell = evt.target;
-  destinationCell.append(newPiece);
-}
-
-function handleMouseLeave(evt) {
-  var x = +evt.target.id;
-  console.log( `leave x = ${x}`);
-
-  evt.target.replaceChildren();
-}
-
 
 /** checkForWin: check board cell-by-cell for "does a win start here?" */
 

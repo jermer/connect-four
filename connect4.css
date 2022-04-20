@@ -37,7 +37,7 @@
 
 @keyframes piecedrop {
   from{
-    top: 0;
+    top: -50%;
   }
   to {
     top: 50%;
@@ -45,6 +45,7 @@
 }
 
 /* TODO: make pieces red/blue,  depending on player 1/2 piece */
+
 .player1 {
   background-color: red;
 }
@@ -61,4 +62,13 @@
 
 #column-top td:hover {
   background-color: gold;
+}
+
+.ghostpiece {
+  visibility: hidden;
+}
+
+#column-top td:hover .ghostpiece {
+  visibility: visible;
+  /* background-color: green; */
 }
