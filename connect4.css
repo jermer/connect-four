@@ -44,8 +44,6 @@
   }
 }
 
-/* TODO: make pieces red/blue,  depending on player 1/2 piece */
-
 .player1 {
   background-color: red;
 }
@@ -64,11 +62,15 @@
   background-color: gold;
 }
 
+/**
+    "ghost pieces" in the top row are used to show
+    which player's turn it currently is
+**/
+
 .ghostpiece {
   visibility: hidden;
 }
 
 #column-top td:hover .ghostpiece {
   visibility: visible;
-  /* background-color: green; */
 }

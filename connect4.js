@@ -9,7 +9,7 @@ const WIDTH = 7;
 const HEIGHT = 6;
 
 let currPlayer = 1; // active player: 1 or 2
-const board = [];   // array of rows, each row is array of cells  (board[y][x])
+const board = [];   // array of rows, each row is array of cells (board[y][x])
 
 let pauseClicks = false;  // temporarily ignore user clicks
 
@@ -18,7 +18,6 @@ let pauseClicks = false;  // temporarily ignore user clicks
  */
 
 function makeBoard() {
-  // TODO: set "board" to empty HEIGHT x WIDTH matrix array
   for (let y = 0; y < HEIGHT; y++) {
     let newRow = [];
     for (let x = 0; x < WIDTH; x++) {
@@ -69,7 +68,6 @@ function makeHtmlBoard() {
 /** findSpotForCol: given column x, return top empty y (null if filled) */
 
 function findSpotForCol(x) {
-  // TODO: write the real version of this, rather than always returning 0
   for (y = HEIGHT - 1; y >= 0; y--) {
     let cell = document.getElementById(`${y}-${x}`);
     if (!cell.hasChildNodes())
@@ -81,11 +79,8 @@ function findSpotForCol(x) {
 /** placeInTable: update DOM to place piece into HTML table of board */
 
 function placeInTable(y, x) {
-  // TODO: make a div and insert into correct table cell
   const newPiece = document.createElement("div");
   newPiece.classList.add(`piece`, `animpiece`, `player${currPlayer}`);
-  newPiece.setAttribute("top", "-500%");
-  // debugger;
   const destinationCell = document.getElementById(`${y}-${x}`);
   destinationCell.append(newPiece);
 }
@@ -93,21 +88,11 @@ function placeInTable(y, x) {
 /** endGame: announce game end */
 
 function endGame(msg) {
-  // TODO: pop up alert message
-  //debugger;
+  // done in a timeout to allow the DOM to refresh before announcing the winner
   setTimeout(() => {
     pauseClicks = true;
     alert(msg);
   }, 250);
-
-  // requestAnimationFrame(() => {
-  //   // fires before next repaint
-  //   requestAnimationFrame(() => {
-  //     // fires before the _next_ next repaint
-  //     // ...which is effectively _after_ the next repaint
-  //     alert(msg);
-  //   });
-  // });
 }
 
 /** handleClick: handle click of column top to play piece */
@@ -123,19 +108,17 @@ function handleClick(evt) {
     }, 250);
   }
 
-  // a click in the cell might be on the "ghost piece"
-  // or in the empty area of the cell
+  // a click in the cell might be on the "ghost piece" or in the empty area of the cell
   let x;
   if (evt.target.classList.contains("piece")) {
-    //console.log("clicked piece");
+    // console.log("clicked piece");
     // change the target to be the cell
-    x = evt.target.parentElement.id;
+    x = +evt.target.parentElement.id;
   }
   else {
-    //console.log("clicked space");
-    x = evt.target.id;
+    // console.log("clicked empty space");
+    x = +evt.target.id;
   }
-  // x = +target.id;
 
   // get next spot in column (if none, ignore click)
   var y = findSpotForCol(x);
@@ -151,14 +134,11 @@ function handleClick(evt) {
 
   // check for win
   if (checkForWin()) {
-    endGame(`Player ${currPlayer} won!`);
+    endGame(`Player ${currPlayer} wins!`);
     return;
   }
 
-  //alert("Hang on!");
-
-  // check for tie
-  // if all cells in board are filled; if so call, call endGame
+  // check for tie, if all cells in the board are filled
   if (board.every(row => {
     return row.every(col => col !== null);
   })) {
@@ -175,6 +155,7 @@ function handleClick(evt) {
 function switchPlayers() {
   currPlayer === 1 ? currPlayer = 2 : currPlayer = 1;
 
+  // change the color of the ghost pieces in column headers
   const ghostArr = [...document.querySelectorAll(".ghostpiece")];
   ghostArr.map((val) => {
     val.classList.toggle('player1');
@@ -200,8 +181,6 @@ function checkForWin() {
         board[y][x] === currPlayer
     );
   }
-
-  // TODO: read and understand this code. Add comments to help you.
 
   // loop over cells in the grid
   for (var y = 0; y < HEIGHT; y++) {
