@@ -5,201 +5,227 @@
  * board fills (tie)
  */
 
-const WIDTH = 7;
-const HEIGHT = 6;
+class Player {
+  constructor(color) {
+    this.color = color;
+  }
+}
 
-let currPlayer = 1; // active player: 1 or 2
-const board = [];   // array of rows, each row is array of cells (board[y][x])
+class Game {
 
-let pauseClicks = false;  // temporarily ignore user clicks
+  constructor(p1, p2, height, width) {
+    this.HEIGHT = height;
+    this.WIDTH = width;
 
-/** makeBoard: create in-JS board structure:
- *    board = array of rows, each row is array of cells  (board[y][x])
- */
+    this.players = [p1, p2];
+    this.currPlayer = p1; // active player
 
-function makeBoard() {
-  for (let y = 0; y < HEIGHT; y++) {
-    let newRow = [];
-    for (let x = 0; x < WIDTH; x++) {
-      newRow.push(null);
+    this.board = []; // array of rows, each row is array of cells (board[y][x])
+
+    this.pauseClicks = false; // flag to temporarily ignore user clicks
+
+    this.makeBoard();
+    this.makeHtmlBoard();
+  }
+
+  /** makeBoard: create in-JS board structure:
+   *    board = array of rows, each row is array of cells (board[y][x])
+   */
+  makeBoard() {
+    for (let y = 0; y < this.HEIGHT; y++) {
+      this.board.push(Array.from({ length: this.WIDTH }));
     }
-    board.push(newRow);
   }
-}
 
-/** makeHtmlBoard: make HTML table and row of column tops. */
+  /** makeHtmlBoard: make HTML table and row of column tops. */
 
-function makeHtmlBoard() {
-  // Get "htmlBoard" variable from the item in HTML w/ID of "board"
-  const htmlBoard = document.getElementById('board');
+  makeHtmlBoard() {
+    // Get "htmlBoard" variable from the item in HTML w/ID of "board"
+    const htmlBoard = $('#board').empty();
 
-  // Create the top table row of the game board, and listen for clicks in the row
-  const top = document.createElement("tr");
-  top.setAttribute("id", "column-top");
-  top.addEventListener("click", handleClick);
+    // Create the top table row of the game board, and listen for clicks in the row
+    const top = $('<tr>')
+      .attr('id', 'column-top')
+      .on('click', this.handleClick.bind(this));
 
-  // Create the individual cells of the top row
-  for (let x = 0; x < WIDTH; x++) {
-    const headCell = document.createElement("td");
-    headCell.setAttribute("id", x);
+    // Create the individual cells of the top row
+    for (let x = 0; x < this.WIDTH; x++) {
+      const headCell = $('<td>')
+        .attr('id', x);
 
-    // add a "ghost piece" to be displayed in the top row
-    const ghostPiece = document.createElement("div");
-    ghostPiece.classList.add(`ghostpiece`, `piece`, `player${currPlayer}`);
-    headCell.append(ghostPiece);
+      // add a "ghost piece" to be displayed in the top row
+      const ghostPiece = $('<div>')
+        .addClass(`ghostpiece piece`)
+        .css('background-color', this.currPlayer.color);
+      // .addClass(`ghostpiece piece player${this.currPlayer}`);
 
-    top.append(headCell);
-  }
-  htmlBoard.append(top);
-
-  // Create HEIGHT additional rows for the table
-  for (let y = 0; y < HEIGHT; y++) {
-    const row = document.createElement("tr");
-    // Create WIDTH cells in each of the new rows
-    for (let x = 0; x < WIDTH; x++) {
-      const cell = document.createElement("td");
-      cell.setAttribute("id", `${y}-${x}`);
-      row.append(cell);
+      headCell.append(ghostPiece);
+      top.append(headCell);
     }
-    htmlBoard.append(row);
+    htmlBoard.append(top);
+
+    // Create HEIGHT additional rows for the table
+    for (let y = 0; y < this.HEIGHT; y++) {
+      const row = $('<tr>');
+
+      // Create WIDTH cells in each of the new rows
+      for (let x = 0; x < this.WIDTH; x++) {
+        const cell = $('<td>')
+          .attr('id', `${y}-${x}`);
+        row.append(cell);
+      }
+      htmlBoard.append(row);
+    }
   }
-}
 
-/** findSpotForCol: given column x, return top empty y (null if filled) */
+  /** findSpotForCol: given column x, return top empty y (null if filled) */
 
-function findSpotForCol(x) {
-  for (y = HEIGHT - 1; y >= 0; y--) {
-    let cell = document.getElementById(`${y}-${x}`);
-    if (!cell.hasChildNodes())
-      return y;
+  findSpotForCol(x) {
+    for (let y = this.HEIGHT - 1; y >= 0; y--) {
+      if (!this.board[y][x]) {
+        return y;
+      }
+    }
+    return null;
   }
-  return null;
-}
 
-/** placeInTable: update DOM to place piece into HTML table of board */
+  /** placeInTable: update DOM to place piece into HTML table of board */
 
-function placeInTable(y, x) {
-  const newPiece = document.createElement("div");
-  newPiece.classList.add(`piece`, `animpiece`, `player${currPlayer}`);
-  const destinationCell = document.getElementById(`${y}-${x}`);
-  destinationCell.append(newPiece);
-}
+  placeInTable(y, x) {
+    const newPiece = $('<div>')
+      .addClass(`piece animpiece player${this.currPlayer}`)
+      .css('background-color', this.currPlayer.color);
+    // .addClass(`piece animpiece player${this.currPlayer}`);
 
-/** endGame: announce game end */
-
-function endGame(msg) {
-  // done in a timeout to allow the DOM to refresh before announcing the winner
-  setTimeout(() => {
-    pauseClicks = true;
-    alert(msg);
-  }, 250);
-}
-
-/** handleClick: handle click of column top to play piece */
-
-function handleClick(evt) {
-  if (pauseClicks) {
-    return;
+    $(`#${y}-${x}`).append(newPiece);
   }
-  else {
-    pauseClicks = true;
+
+  /** endGame: announce game end */
+
+  endGame(msg) {
+    // done in a timeout to allow the DOM to refresh before announcing the winner
     setTimeout(() => {
-      pauseClicks = false;
+      this.pauseClicks = true;
+      alert(msg);
     }, 250);
   }
 
-  // a click in the cell might be on the "ghost piece" or in the empty area of the cell
-  let x;
-  if (evt.target.classList.contains("piece")) {
-    // console.log("clicked piece");
-    // change the target to be the cell
-    x = +evt.target.parentElement.id;
-  }
-  else {
-    // console.log("clicked empty space");
-    x = +evt.target.id;
-  }
+  /** handleClick: handle click of column top to play piece */
 
-  // get next spot in column (if none, ignore click)
-  var y = findSpotForCol(x);
-  if (y === null) {
-    return;
-  }
+  handleClick(evt) {
+    if (this.pauseClicks) {
+      return;
+    }
+    else {
+      this.pauseClicks = true;
+      setTimeout(() => {
+        this.pauseClicks = false;
+      }, 250);
+    }
 
-  // place piece in board and add to HTML table
-  placeInTable(y, x);
+    // a click in the cell might be on the "ghost piece" or in the empty area of the cell
+    let x;
+    if (evt.target.classList.contains("piece")) {
+      // console.log("clicked piece");
+      // change the target to be the cell
+      x = +evt.target.parentElement.id;
+    }
+    else {
+      // console.log("clicked empty space");
+      x = +evt.target.id;
+    }
 
-  // update in-memory board
-  board[y][x] = currPlayer;
+    // get next spot in column (if none, ignore click)
+    var y = this.findSpotForCol(x);
+    if (y === null) {
+      return;
+    }
 
-  // check for win
-  if (checkForWin()) {
-    endGame(`Player ${currPlayer} wins!`);
-    return;
-  }
+    // place piece in board and add to HTML table
+    this.placeInTable(y, x);
 
-  // check for tie, if all cells in the board are filled
-  if (board.every(row => {
-    return row.every(col => col !== null);
-  })) {
-    return endGame(`It's a tie!`);
-  }
+    // update in-memory board
+    this.board[y][x] = this.currPlayer;
 
-  // switch players
-  switchPlayers();
-}
+    // check for win
+    if (this.checkForWin()) {
+      this.endGame(`Player ${this.currPlayer.color} wins!`);
+      return;
+    }
 
+    // check for tie, if all cells in the board are filled
+    if (this.board.every(row => row.every(col => col))) {
+      return this.endGame(`It's a tie!`);
+    }
 
-/** Switch players **/
-
-function switchPlayers() {
-  currPlayer === 1 ? currPlayer = 2 : currPlayer = 1;
-
-  // change the color of the ghost pieces in column headers
-  const ghostArr = [...document.querySelectorAll(".ghostpiece")];
-  ghostArr.map((val) => {
-    val.classList.toggle('player1');
-    val.classList.toggle('player2');
-    return val;
-  })
-}
-
-/** checkForWin: check board cell-by-cell for "does a win start here?" */
-
-function checkForWin() {
-  function _win(cells) {
-    // Check four cells to see if they're all color of current player
-    //  - cells: list of four (y, x) cells
-    //  - returns true if all are legal coordinates & all match currPlayer
-
-    return cells.every(
-      ([y, x]) =>
-        y >= 0 &&
-        y < HEIGHT &&
-        x >= 0 &&
-        x < WIDTH &&
-        board[y][x] === currPlayer
-    );
+    // switch players
+    this.switchPlayers();
   }
 
-  // loop over cells in the grid
-  for (var y = 0; y < HEIGHT; y++) {
-    for (var x = 0; x < WIDTH; x++) {
-      // check to the right in the grid
-      var horiz = [[y, x], [y, x + 1], [y, x + 2], [y, x + 3]];
-      // check down in the grid
-      var vert = [[y, x], [y + 1, x], [y + 2, x], [y + 3, x]];
-      // check diagonal down and to the right
-      var diagDR = [[y, x], [y + 1, x + 1], [y + 2, x + 2], [y + 3, x + 3]];
-      // check diagonal down and to the left
-      var diagDL = [[y, x], [y + 1, x - 1], [y + 2, x - 2], [y + 3, x - 3]];
-      // check whether any of those four directions contains a win
-      if (_win(horiz) || _win(vert) || _win(diagDR) || _win(diagDL)) {
-        return true;
+
+  /** Switch players **/
+
+  switchPlayers() {
+    this.currPlayer =
+      this.currPlayer === this.players[0] ? this.players[1] : this.players[0];
+
+    // change the color of the ghost pieces in column headers
+    //$('.ghostpiece').toggleClass('player1 player2');
+    $('.ghostpiece').css('background-color', this.currPlayer.color);
+  }
+
+  /** checkForWin: check board cell-by-cell for "does a win start here?" */
+
+  checkForWin() {
+    const _win = (cells) => {
+      // Check four cells to see if they're all color of current player
+      //  - cells: list of four (y, x) cells
+      //  - returns true if all are legal coordinates & all match currPlayer
+
+      return cells.every(
+        ([y, x]) =>
+          y >= 0 &&
+          y < this.HEIGHT &&
+          x >= 0 &&
+          x < this.WIDTH &&
+          this.board[y][x] === this.currPlayer
+      );
+    }
+
+    // loop over cells in the grid
+    for (var y = 0; y < this.HEIGHT; y++) {
+      for (var x = 0; x < this.WIDTH; x++) {
+        // check to the right in the grid
+        var horiz = [[y, x], [y, x + 1], [y, x + 2], [y, x + 3]];
+        // check down in the grid
+        var vert = [[y, x], [y + 1, x], [y + 2, x], [y + 3, x]];
+        // check diagonal down and to the right
+        var diagDR = [[y, x], [y + 1, x + 1], [y + 2, x + 2], [y + 3, x + 3]];
+        // check diagonal down and to the left
+        var diagDL = [[y, x], [y + 1, x - 1], [y + 2, x - 2], [y + 3, x - 3]];
+        // check whether any of those four directions contains a win
+        if (_win(horiz) || _win(vert) || _win(diagDR) || _win(diagDL)) {
+          return true;
+        }
       }
     }
   }
-}
 
-makeBoard();
-makeHtmlBoard();
+} // end class Game
+
+
+/**
+ * Button to start the game
+ */
+const button = $('#btn').on('click', handleButtonClick);
+
+function handleButtonClick(evt) {
+
+
+  p1 = new Player($('#p1-color').val());
+  p2 = new Player($('#p2-color').val());
+  // p1 = new Player( document.getElementById('p1-color').value );
+  // p2 = new Player( document.getElementById('p2-color').value );
+
+  new Game(p1, p2, 6, 7);
+}
