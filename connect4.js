@@ -149,7 +149,8 @@ class Game {
 
     // check for win
     if (this.checkForWin()) {
-      this.endGame(`Player ${this.currPlayer.color} wins!`);
+      const winner = this.currPlayer === this.players[0] ? 1 : 2;
+      this.endGame(`Player ${winner} wins!`);
       return;
     }
 
@@ -217,10 +218,9 @@ class Game {
 /**
  * Button to start the game
  */
-const button = $('#btn').on('click', handleButtonClick);
+const button = $('#start-btn').on('click', handleButtonClick);
 
 function handleButtonClick(evt) {
-
 
   p1 = new Player($('#p1-color').val());
   p2 = new Player($('#p2-color').val());
